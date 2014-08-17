@@ -48,7 +48,7 @@ main <- function(destfile = "plot1.png") {
     file.SCC <- "Source_Classification_Code.rds"
     
     # initialize results data frame
-    res <- rnorm(1000)
+    res <- NULL
 
     # fetch emissions data and classification table
     # looks for global scope variable to save time building data frame
@@ -75,8 +75,11 @@ main <- function(destfile = "plot1.png") {
         cat(paste("Using ", file.SCC, " previously loaded into memory.\n", sep = ""))        
     }    
     
+    # aggregate PM2.5 emissions by year and plot
+    res <- aggregate(Emissions ~ year, NEI[NEI$year %in% c(1999, 2002, 2005, 2008),], sum)
     png(filename = destfile, height = 480, width = 480)
-    hist(res)
+    par(mfrow = c(1,1))
+    barplot(res$Emissions / 1000000, names.arg=res$year, main = "Total Emissions Declining Year Over Year", horiz = FALSE, xlab = destfile, ylab = "PM2.5 Emitted (Millions of Tons)")
     dev.off()
     cat(paste("Created file ", destfile, " in current working directory.\n", sep = ""))
     
