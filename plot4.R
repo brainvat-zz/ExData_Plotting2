@@ -1,19 +1,17 @@
 ###########
 # Exploratory Data Analysis
 # -------
-# Course Project 2: plot1.R
+# Course Project 2: plot4.R
 #
 # Assignment Info:
 # https://class.coursera.org/exdata-005/human_grading
 # 
 # Data File:
 #   https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip
-#
+# 
 # Question:
-#   Have total emissions from PM2.5 decreased in the United States from 1999 
-#   to 2008? Using the base plotting system, make a plot showing the total 
-#   PM2.5 emission from all sources for each of the years 1999, 2002, 2005, 
-#   and 2008.
+#   Across the United States, how have emissions from coal combustion-
+#   related sources changed from 1999–2008?
 #
 # Work by: Allen Hammock
 #  Github: brainvat
@@ -29,8 +27,8 @@
 #    Source_Classification_Code.rds
 #    summarySCC_PM25.rds
 #
-# 2. Source plot1.R into your R environment. The main() function will be
-#    called automatically.  A file, plot1.png will be created in the working
+# 2. Source plot4.R into your R environment. The main() function will be
+#    called automatically.  A file, plot4.png will be created in the working
 #    directory, overwriting any previous version that may exist.
 #
 # 3. The data frame used to create the plot will be returned in the global
@@ -41,7 +39,7 @@
 if (!exists("NEI")) NEI <<- NULL
 if (!exists("SCC")) SCC <<- NULL
 
-main <- function(destfile = "plot1.png") {
+main <- function(destfile = "plot4.png") {
 
     # input files
     file.NEI <- "summarySCC_PM25.rds"
