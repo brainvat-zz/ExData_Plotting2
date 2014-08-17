@@ -1,0 +1,9 @@
+.RHistory
+.RData
+.DS_Store
+*.zip
+*.txt
+*.html
+*.rds
+*.png
+
