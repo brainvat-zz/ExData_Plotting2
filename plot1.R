@@ -15,6 +15,10 @@
 #   PM2.5 emission from all sources for each of the years 1999, 2002, 2005, 
 #   and 2008.
 #
+# Answer:
+#  Yes, as the bar chart plot1.png shows, overall total emissions have
+#  steadily decreased year over year between 1999 and 2008.
+#
 # Work by: Allen Hammock
 #  Github: brainvat
 # Project: https://github.com/brainvat/ExData_Plotting2/
@@ -66,7 +70,7 @@ main <- function(destfile = "plot1.png") {
     
     if (!sum(dim(SCC) == c(11717, 15)) == 2) {
         if (file.exists(file.SCC)) {
-            cat(paste("Loading ", file.SCC, " please be patient.\n", sep = ""))
+            cat(paste("Loading ", file.SCC, ".\n", sep = ""))
             SCC <<- readRDS(file.SCC)                   
         } else {
             stop(paste("ABORT. ", file.SCC, " file is missing.  Check your current working directory.", sep = ""))
@@ -76,10 +80,11 @@ main <- function(destfile = "plot1.png") {
     }    
     
     # aggregate PM2.5 emissions by year and plot
+    cat(paste("Generating plot, this may take a few seconds.\n", sep = ""))
     res <- aggregate(Emissions ~ year, NEI[NEI$year %in% c(1999, 2002, 2005, 2008),], sum)
     png(filename = destfile, height = 480, width = 480)
     par(mfrow = c(1,1))
-    barplot(res$Emissions / 1000000, names.arg=res$year, main = "Total Emissions Declining Year Over Year", horiz = FALSE, xlab = destfile, ylab = "PM2.5 Emitted (Millions of Tons)")
+    barplot(res$Emissions / 1000000, names.arg=res$year, main = "Total U.S. Emissions Declining Year Over Year", horiz = FALSE, xlab = "All SCC Sources", ylab = "PM2.5 Emitted (Millions of Tons)")
     dev.off()
     cat(paste("Created file ", destfile, " in current working directory.\n", sep = ""))
     

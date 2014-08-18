@@ -64,7 +64,7 @@ main <- function(destfile = "plot4.png") {
     
     if (!sum(dim(SCC) == c(11717, 15)) == 2) {
         if (file.exists(file.SCC)) {
-            cat(paste("Loading ", file.SCC, " please be patient.\n", sep = ""))
+            cat(paste("Loading ", file.SCC, ".\n", sep = ""))
             SCC <<- readRDS(file.SCC)                   
         } else {
             stop(paste("ABORT. ", file.SCC, " file is missing.  Check your current working directory.", sep = ""))
@@ -73,8 +73,12 @@ main <- function(destfile = "plot4.png") {
         cat(paste("Using ", file.SCC, " previously loaded into memory.\n", sep = ""))        
     }    
     
+    # aggregate PM2.5 emissions by year and plot
+    cat(paste("Generating plot, this may take a few seconds.\n", sep = ""))
+    res <- aggregate(Emissions ~ year, NEI[NEI$year %in% c(1999, 2002, 2005, 2008),], sum)
     png(filename = destfile, height = 480, width = 480)
-    hist(res)
+    par(mfrow = c(1,1))
+    barplot(res$Emissions / 1000000, names.arg=res$year, main = "Total Emissions Declining Year Over Year", horiz = FALSE, xlab = destfile, ylab = "PM2.5 Emitted (Millions of Tons)")
     dev.off()
     cat(paste("Created file ", destfile, " in current working directory.\n", sep = ""))
     

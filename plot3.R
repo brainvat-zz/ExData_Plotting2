@@ -69,7 +69,7 @@ main <- function(destfile = "plot3.png") {
     
     if (!sum(dim(SCC) == c(11717, 15)) == 2) {
         if (file.exists(file.SCC)) {
-            cat(paste("Loading ", file.SCC, " please be patient.\n", sep = ""))
+            cat(paste("Loading ", file.SCC, ".\n", sep = ""))
             SCC <<- readRDS(file.SCC)                   
         } else {
             stop(paste("ABORT. ", file.SCC, " file is missing.  Check your current working directory.", sep = ""))
@@ -78,8 +78,32 @@ main <- function(destfile = "plot3.png") {
         cat(paste("Using ", file.SCC, " previously loaded into memory.\n", sep = ""))        
     }    
     
-    png(filename = destfile, height = 480, width = 480)
-    hist(res)
+    # aggregate PM2.5 emissions by year and type and plot
+    cat(paste("Generating plot, this may take a few seconds.\n", sep = ""))
+    
+    # install.packages("ggplot2", "gridExtra")
+    library(ggplot2)
+    library(gridExtra)
+    
+    png(filename = destfile, height = 480, width = 480 * 2)
+    res <- aggregate(Emissions ~ year + type, NEI[(NEI$fips == "24510") & (NEI$year %in% c(1999, 2008)),], sum)
+    plot1 <- ggplot(res[res$type %in% c("NON-ROAD", "NONPOINT", "ON-ROAD"),], aes(x = factor(year), y = Emissions)) +
+        geom_bar(stat = "identity", aes(fill = factor(year))) +
+        facet_grid(. ~ type) + scale_fill_discrete(name="Year") +
+        ylab("PM2.5 Emitted (Tons)") + xlab("1999 vs 2008") +
+        theme(legend.position = "none") +
+        theme(plot.title = element_text(family = "Helvetica", face = "bold", size = 20)) +
+        ggtitle("Most Source Types Show\nSignificant Emissions Decrease")
+    
+    plot2 <- ggplot(res[res$type %in% c("POINT"),], aes(x = factor(year), y = Emissions)) +
+              geom_bar(stat = "identity", aes(fill = factor(year))) +
+              facet_grid(. ~ type) + scale_fill_discrete(name="Year") +
+              ylab("PM2.5 Emitted (Tons)") + xlab("1999 vs 2008") +
+              theme(legend.position = "none") +
+              theme(plot.title = element_text(family = "Helvetica", face = "bold", size = 20)) +
+              ggtitle("\"Point\" Source Type Shows\nSmall Emissions Gain")
+    
+    grid.arrange(plot1, plot2, nrow=1, ncol=2)
     dev.off()
     cat(paste("Created file ", destfile, " in current working directory.\n", sep = ""))
     
