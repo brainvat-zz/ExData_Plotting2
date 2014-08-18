@@ -84,7 +84,7 @@ main <- function(destfile = "plot1.png") {
     res <- aggregate(Emissions ~ year, NEI[NEI$year %in% c(1999, 2002, 2005, 2008),], sum)
     png(filename = destfile, height = 480, width = 480)
     par(mfrow = c(1,1))
-    barplot(res$Emissions / 1000000, names.arg=res$year, main = "Total U.S. Emissions Declining Year Over Year", horiz = FALSE, xlab = "All SCC Sources", ylab = "PM2.5 Emitted (Millions of Tons)")
+    barplot(res$Emissions / 1000000, names.arg=res$year, main = "Total U.S. Emissions From PM2.5 Have Decreased\nYear Over Year From 1999 to 2008", horiz = FALSE, xlab = "All SCC Sources", ylab = "PM2.5 Emitted (Millions of Tons)")
     dev.off()
     cat(paste("Created file ", destfile, " in current working directory.\n", sep = ""))
     

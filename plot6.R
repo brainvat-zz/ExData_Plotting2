@@ -48,7 +48,7 @@ main <- function(destfile = "plot6.png") {
     file.SCC <- "Source_Classification_Code.rds"
     
     # initialize results data frame
-    res <- rnorm(1000)
+    res <- NULL
 
     # fetch emissions data and classification table
     # looks for global scope variable to save time building data frame
@@ -75,12 +75,34 @@ main <- function(destfile = "plot6.png") {
         cat(paste("Using ", file.SCC, " previously loaded into memory.\n", sep = ""))        
     }    
     
-    # aggregate PM2.5 emissions by year and plot
-    cat(paste("Generating plot, this may take a few seconds.\n", sep = ""))
-    res <- aggregate(Emissions ~ year, NEI[NEI$year %in% c(1999, 2002, 2005, 2008),], sum)
-    png(filename = destfile, height = 480, width = 480)
-    par(mfrow = c(1,1))
-    barplot(res$Emissions / 1000000, names.arg=res$year, main = "Total Emissions Declining Year Over Year", horiz = FALSE, xlab = destfile, ylab = "PM2.5 Emitted (Millions of Tons)")
+    # install.packages("ggplot2", "gridExtra", "scales")
+    library(ggplot2)
+    library(gridExtra)
+    library(scales)
+    
+    motor.comb <- SCC[grep(SCC$EI.Sector, pattern = "mobile \\- on\\-road", ignore.case = TRUE), names(SCC)[1:4]]
+    my.NEI <<- merge(x = NEI[(NEI$fips %in% c("24510", "06037")) & (NEI$SCC %in% motor.comb$SCC) & (NEI$year %in% c(1999, 2002, 2005, 2008)),], y = motor.comb, by = "SCC", all.x = TRUE)
+    res <- aggregate(Emissions ~ year + fips, my.NEI, sum)
+    res[res$fips == "06037", c("fips")] <- "Los Angeles County, CA"
+    res[res$fips == "24510", c("fips")] <- "Baltimore City, MD"
+    png(filename = destfile, height = 300 * 2, width = 300 * 2)
+    
+    plot <- ggplot(res, aes(x = factor(year), y = Emissions)) +
+        geom_bar(stat = "identity", aes(fill = factor(year))) +
+        facet_grid(. ~ fips) + 
+        theme(strip.text.x = element_text(size = 10)) +
+        scale_fill_discrete(name = "Year") +
+        theme(plot.margin = unit(c(1, 1, 0.5, 0.5), "cm")) +
+        ylab("PM2.5 Emitted (Tons)") + xlab("") +
+        theme(legend.position = "none") +
+        theme(plot.title = element_text(family = "Helvetica", face = "bold", size = 13, lineheight = 1.2, vjust = 2)) +
+        ggtitle(paste("Baltimore City, Maryland Emission Reductions Between 1999-2008 Far Outpace",
+                      "Los Angeles County, California Which Struggles to Keep Emissions Under Control", sep = "\n")) +
+        geom_text(aes(x = factor(year), y = Emissions, 
+                      label = round(Emissions, 0), 
+                      ymax = Emissions, vjust = -0.5), position = position_dodge(width=1))
+    
+    print(plot)
     dev.off()
     cat(paste("Created file ", destfile, " in current working directory.\n", sep = ""))
     

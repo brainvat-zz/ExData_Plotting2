@@ -51,8 +51,8 @@ main <- function(destfile = "plot3.png") {
     file.SCC <- "Source_Classification_Code.rds"
     
     # initialize results data frame
-    res <- rnorm(1000)
-
+    res <- NULL
+    
     # fetch emissions data and classification table
     # looks for global scope variable to save time building data frame
     # on repeat function calls
@@ -81,27 +81,38 @@ main <- function(destfile = "plot3.png") {
     # aggregate PM2.5 emissions by year and type and plot
     cat(paste("Generating plot, this may take a few seconds.\n", sep = ""))
     
-    # install.packages("ggplot2", "gridExtra")
+    # install.packages("ggplot2", "gridExtra", "scales")
     library(ggplot2)
     library(gridExtra)
+    library(scales)
     
     png(filename = destfile, height = 480, width = 480 * 2)
     res <- aggregate(Emissions ~ year + type, NEI[(NEI$fips == "24510") & (NEI$year %in% c(1999, 2008)),], sum)
     plot1 <- ggplot(res[res$type %in% c("NON-ROAD", "NONPOINT", "ON-ROAD"),], aes(x = factor(year), y = Emissions)) +
         geom_bar(stat = "identity", aes(fill = factor(year))) +
         facet_grid(. ~ type) + scale_fill_discrete(name="Year") +
-        ylab("PM2.5 Emitted (Tons)") + xlab("1999 vs 2008") +
+        theme(plot.margin = unit(c(1, 1, 0.5, 0.5), "cm")) +
+        ylab("PM2.5 Emitted (Tons)") + xlab("") +
         theme(legend.position = "none") +
-        theme(plot.title = element_text(family = "Helvetica", face = "bold", size = 20)) +
-        ggtitle("Most Source Types Show\nSignificant Emissions Decrease")
+        theme(plot.title = element_text(family = "Helvetica", face = "bold", size = 14, lineheight = 1.2, vjust = 2)) +
+        ggtitle("NON-ROAD, NONPOINT, and ON-ROAD Sources Have\nDecreased in Emissions in Baltimore City, MD from 1999-2008") +
+        geom_text(aes(x = factor(year), y = Emissions, 
+                      label = round(Emissions, 0), 
+                      ymax = Emissions, vjust = 2), position = position_dodge(width=1))
     
+    ylim.max <- max(res[res$type %in% c("NON-ROAD", "NONPOINT", "ON-ROAD"),c("Emissions")])
     plot2 <- ggplot(res[res$type %in% c("POINT"),], aes(x = factor(year), y = Emissions)) +
-              geom_bar(stat = "identity", aes(fill = factor(year))) +
-              facet_grid(. ~ type) + scale_fill_discrete(name="Year") +
-              ylab("PM2.5 Emitted (Tons)") + xlab("1999 vs 2008") +
-              theme(legend.position = "none") +
-              theme(plot.title = element_text(family = "Helvetica", face = "bold", size = 20)) +
-              ggtitle("\"Point\" Source Type Shows\nSmall Emissions Gain")
+        geom_bar(stat = "identity", aes(fill = factor(year))) +
+        facet_grid(. ~ type) + scale_fill_discrete(name="Year") +
+        theme(plot.margin = unit(c(1, 1, 0.5, 0.5), "cm")) +
+        ylab("PM2.5 Emitted (Tons)") + xlab("") +
+        theme(legend.position = "none") +
+        theme(plot.title = element_text(family = "Helvetica", face = "bold", size = 14, lineheight = 1.2, vjust = 2)) +
+        ggtitle("POINT Source Has Seen Small Increase in Emissions\nin Baltimore City, MD from 1999-2008") + 
+        ylim(0, ylim.max) +
+        geom_text(aes(x = factor(year), y = Emissions, 
+                      label = round(Emissions, 0), 
+                      ymax = Emissions, vjust = 2), position = position_dodge(width=1))
     
     grid.arrange(plot1, plot2, nrow=1, ncol=2)
     dev.off()

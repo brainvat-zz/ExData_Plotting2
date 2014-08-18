@@ -38,6 +38,7 @@
 
 if (!exists("NEI")) NEI <<- NULL
 if (!exists("SCC")) SCC <<- NULL
+if (!exists("my.NEI")) my.NEI <<- NULL
 
 main <- function(destfile = "plot4.png") {
 
@@ -46,8 +47,8 @@ main <- function(destfile = "plot4.png") {
     file.SCC <- "Source_Classification_Code.rds"
     
     # initialize results data frame
-    res <- rnorm(1000)
-
+    res <- NULL
+    
     # fetch emissions data and classification table
     # looks for global scope variable to save time building data frame
     # on repeat function calls
@@ -75,10 +76,33 @@ main <- function(destfile = "plot4.png") {
     
     # aggregate PM2.5 emissions by year and plot
     cat(paste("Generating plot, this may take a few seconds.\n", sep = ""))
-    res <- aggregate(Emissions ~ year, NEI[NEI$year %in% c(1999, 2002, 2005, 2008),], sum)
-    png(filename = destfile, height = 480, width = 480)
-    par(mfrow = c(1,1))
-    barplot(res$Emissions / 1000000, names.arg=res$year, main = "Total Emissions Declining Year Over Year", horiz = FALSE, xlab = destfile, ylab = "PM2.5 Emitted (Millions of Tons)")
+    
+    # install.packages("ggplot2", "gridExtra", "scales")
+    library(ggplot2)
+    library(gridExtra)
+    library(scales)
+    
+    coal.comb <- SCC[grep(SCC$EI.Sector, pattern = "fuel comb .+ coal", ignore.case = TRUE), names(SCC)[1:4]]
+    my.NEI <<- merge(x = NEI[(NEI$SCC %in% coal.comb$SCC) & (NEI$year %in% c(1999, 2002, 2005, 2008)),], y = coal.comb, by = "SCC", all.x = TRUE)
+    res <- aggregate(Emissions ~ year + EI.Sector, my.NEI, sum)
+    png(filename = destfile, height = 480, width = 480 * 3)
+
+    plot <- ggplot(res, aes(x = factor(year), y = Emissions/1000)) +
+        geom_bar(stat = "identity", aes(fill = factor(year))) +
+        facet_grid(. ~ EI.Sector) + 
+        theme(strip.text.x = element_text(size = 14)) +
+        scale_fill_discrete(name = "Year") +
+        theme(plot.margin = unit(c(1, 1, 0.5, 0.5), "cm")) +
+        ylab("PM2.5 Emitted (Thousands of Tons)") + xlab("") +
+        theme(legend.position = "none") +
+        theme(plot.title = element_text(family = "Helvetica", face = "bold", size = 22, lineheight = 1.2, vjust = 2)) +
+        ggtitle(paste("Electric Generation From Coal Fuel Combustion Sees Biggest Gains in Emission Reductions Between 1999-2008",
+                      "Reductions From Industrial Boilers Struggle While Commercial/Institutional Emissions Make Steady Progress", sep = "\n")) +
+        geom_text(aes(x = factor(year), y = Emissions/1000, 
+                      label = round(Emissions/1000, 0), 
+                      ymax = Emissions/1000, vjust = -0.5), position = position_dodge(width=1))
+
+    print(plot)
     dev.off()
     cat(paste("Created file ", destfile, " in current working directory.\n", sep = ""))
     
